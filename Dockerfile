@@ -9,22 +9,24 @@ ENV LC_ALL C.UTF-8
 # add a Personal Package Archives (PPA)
 # the PPA has changed. we need both ppa:ondrej/php and ppa:ondrej/php-qa
 # add the repositories and install PHP7
-RUN apt-get update && apt-get install software-properties-common -y --no-install-recommends -y --force-yes \
-    -y language-pack-en-base wget \
-    &&  LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php \
-    &&  LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php-qa \
-    && apt-get update && apt-get install -y --no-install-recommends -y --force-yes \
+RUN apt-get update && apt-get install software-properties-common -y --no-install-recommends -y \
+    language-pack-en-base wget \
+    && export LC_ALL=en_US.UTF-8 \
+       export LANG=en_US.UTF-8 \
+    && add-apt-repository ppa:ondrej/php \
+    && add-apt-repository ppa:ondrej/php-qa \
+    && apt-get update && apt-get install -y --no-install-recommends -y \
         make \
         mc \
         htop \
+        mysql-server \
         mysql-client \
         apache2 \
         libapache2-mod-php7.0 \
-        php7.0 php7.0-fpm php7.0-mysql php7.0-curl php7.0-gd php7.0-json php7.0-mcrypt php7.0-opcache php7.0-xml php7.0-intl \
-        debconf-utils
-
-# clean up
-RUN apt-get --purge autoremove && apt-get clean
+        php7.0 php7.0-mysql php7.0-curl php7.0-gd php7.0-json php7.0-mcrypt php7.0-opcache php7.0-xml php7.0-intl \
+        debconf-utils \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && apt-get --purge autoremove && apt-get clean
 
 RUN rm -rf /var/www && \
     mkdir -p /var/lock/apache2 /var/run/apache2 /var/log/apache2 /var/www/httpdocs /var/www/log && \
@@ -45,10 +47,6 @@ ENV APACHE_PID_FILE /var/run/apache2.pid
 COPY apache2/apache2.conf /etc/apache2/sites-available/000-default.conf
 COPY apache2/ports.conf /etc/apache2/ports.conf
 RUN a2ensite 000-default.conf
-
-RUN lsb_release -a
-
-RUN ls -l /etc/apache2/mods-enabled/
 
 RUN echo -e "\nexport TERM=xterm" >> ~/.bashrc
 
